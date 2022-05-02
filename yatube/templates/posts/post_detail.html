@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}{{ post.text|truncatewords:30 }}{% endblock %}
+{% block content %}
+  <div class="container py-5 row">
+    <aside class="col-12 col-md-3">
+      <article>
+        <ul class="list-group list-group-flush">
+          <li>
+            Дата публикации: {{ post.pub_date|date:'d E Y' }}
+          </li>
+              <li>
+                {% if post.group %}
+                Группа: <a href="{% url 'posts:group_list' post.group.slug %}">{{ post.group.title }}</a>
+                {% else %}
+                <span style="color:red">Группы нет</span>
+                {% endif %}
+              </li>
+            <li>
+              Автор: <a href="{% url 'posts:profile' post.author %}">{{ post.author.get_full_name }}</a>
+            </li>
+            <li>
+            Всего постов автора:  <span >{{ post.author.posts.count }}</span>
+          </li>
+        </ul>
+      </article>
+    </aside>
+    <article class="col-12 col-md-9">
+      {% include 'posts/includes/image_displaying.html' %}
+      <p>
+       {{ post.text|linebreaks }}
+      </p>
+      {% if request.user == post.author %}
+        <a class="btn btn-primary" href="{% url 'posts:post_edit' post.pk %}">
+                редактировать запись
+        </a>
+        <a class="btn btn-primary" href="{% url 'posts:post_delete' post.pk %}">
+          удалить запись
+        </a>
+      {% endif %}
+      {% include 'posts/includes/add_comment.html' %}
+    </article>
+  </div>
+{% endblock %}
