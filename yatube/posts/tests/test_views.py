@@ -184,7 +184,7 @@ class PostViewsTest(TestCase):
             response_1, login_redirect + reverse('posts:add_comment',
                                                  args=(self.post.id,)))
         self.assertEqual(response_2.status_code, HTTPStatus.OK)
-        self.assertEqual(self.post.comments.count(), comments_count+1)
+        self.assertEqual(self.post.comments.count(), comments_count + 1)
 
 
 class PaginatorViewsTest(TestCase):
@@ -295,7 +295,7 @@ class FollowTests(TestCase):
         )
         self.assertEqual(subscriptions_count, 0)
         self.assertEqual(response.status_code, HTTPStatus.FOUND)
-        self.assertEqual(Follow.objects.count(), subscriptions_count+1)
+        self.assertEqual(Follow.objects.count(), subscriptions_count + 1)
         response_2 = self.authorized_client.get(
             reverse('posts:profile_unfollow', args=(self.author.username,))
         )
@@ -323,7 +323,6 @@ class FollowTests(TestCase):
         response_2 = self.authorized_client.get('posts:follow_index')
         self.assertEqual(objects_count_follow, 1)
         self.assertEqual(response_create.status_code, HTTPStatus.OK)
-        self.assertEqual(Post.objects.count(), posts_count+1)
+        self.assertEqual(Post.objects.count(), posts_count + 1)
         self.assertEqual(objects_count_follow_2, 2)
         self.assertEqual(response.content, response_2.content)
-
