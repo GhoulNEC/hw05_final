@@ -25,7 +25,7 @@ class PostsURLTests(TestCase):
         )
 
     def setUp(self):
-        self.user_2 = User.objects.create(username='test_user_2')
+        self.user_2 = User.objects.create_user(username='test_user_2')
         self.author_client = Client()
         self.author_client.force_login(self.user)
         self.authorized_client = Client()
@@ -39,6 +39,13 @@ class PostsURLTests(TestCase):
             ('posts:post_create', None, '/create/'),
             ('posts:post_edit', (self.post.id,),
              f'/posts/{self.post.id}/edit/'),
+            ('posts:follow_index', None, '/follow/'),
+            ('posts:add_comment', (self.post.id,),
+             f'/posts/{self.post.id}/comment/'),
+            ('posts:profile_follow', (self.user_2,),
+             f'/profile/{self.user_2}/follow/'),
+            ('posts:profile_unfollow', (self.user_2,),
+             f'/profile/{self.user_2}/unfollow'),
             ('posts:post_delete', (self.post.id,),
              f'/posts/{self.post.id}/delete/')
         )
@@ -76,33 +83,58 @@ class PostsURLTests(TestCase):
                 elif reverse_name in 'posts:post_delete':
                     self.assertRedirects(response, reverse(
                         'posts:post_detail', args=(self.post.id,)))
+                elif reverse_name in ['posts:add_comment',
+                                      'posts:profile_follow',
+                                      'posts:profile_unfollow']:
+                    self.assertEqual(response.status_code, HTTPStatus.FOUND)
                 else:
                     self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_posts_create_and_edit_redirects_guest_client(self):
-        """Страницы /create/, /edit/, /delete/ перенаправляют
-        анонимного пользователя на страницу логина
+        """Страницы /create/, /edit/, /delete/, /comment/, /follow/, /unfollow/
+        перенаправляют анонимного пользователя на страницу логина
         """
         login_redirect = '/auth/login/?next='
         for reverse_name, arg, _ in self.url_names_reverse_names:
             with self.subTest(reverse_name=reverse_name):
                 response = self.client.get(reverse(reverse_name, args=arg))
                 if reverse_name in ['posts:post_create', 'posts:post_edit',
-                                    'posts:post_delete']:
+                                    'posts:post_delete', 'posts:add_comment',
+                                    'posts:profile_follow',
+                                    'posts:profile_unfollow']:
                     self.assertRedirects(
                         response,
                         login_redirect + reverse(reverse_name, args=arg))
+                elif reverse_name in 'posts:follow_index':
+                    self.assertEqual(response.status_code, HTTPStatus.FOUND)
                 else:
                     self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_posts_url_available_to_author(self):
-        """Все URL-адреса доступны автору поста"""
+        """Все URL-адреса доступны автору поста,
+        страницы /follow/ и /unfollow/ доступны авторизованному пользователю.
+        """
         for reverse_name, arg, _ in self.url_names_reverse_names:
             with self.subTest(reverse_name=reverse_name):
                 response = self.author_client.get(
                     reverse(reverse_name, args=arg))
-                if reverse_name in 'posts:post_delete':
+                if reverse_name in ['posts:profile_follow',
+                                    'posts:profile_unfollow']:
+                    response = self.authorized_client.get(
+                        reverse(reverse_name, args=arg)
+                    )
+                    self.assertRedirects(response, reverse(
+                        'posts:profile', args=(self.user_2,)))
+                elif reverse_name in 'posts:post_delete':
                     self.assertRedirects(response, reverse(
                         'posts:profile', args=(self.user,)))
+                elif reverse_name in 'posts:add_comment':
+                    response = self.author_client.get(
+                        reverse(reverse_name, args=arg),
+                        data={'text': 'test_comment'},
+                        follow=True
+                    )
+                    self.assertRedirects(response, reverse(
+                        'posts:post_detail', args=(self.post.id,)))
                 else:
                     self.assertEqual(response.status_code, HTTPStatus.OK)

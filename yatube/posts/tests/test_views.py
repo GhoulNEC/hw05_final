@@ -10,6 +10,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, override_settings, TestCase
 from django.urls import reverse
 
+from ..forms import PostForm
 from ..models import Follow, Group, Post
 
 User = get_user_model()
@@ -68,7 +69,8 @@ class PostViewsTest(TestCase):
              'posts/group_list.html'),
             ('posts:profile', (self.user,), 'posts/profile.html'),
             ('posts:post_detail', (self.post.id,), 'posts/post_detail.html'),
-            ('posts:post_create', None, 'posts/create_post.html')
+            ('posts:post_create', None, 'posts/create_post.html'),
+            ('posts:follow_index', None, 'posts/follow.html')
         )
         for reverse_name, arg, template in posts_names_templates:
             with self.subTest(reverse_name=reverse_name):
@@ -92,6 +94,8 @@ class PostViewsTest(TestCase):
                         response = self.authorized_author.get(
                             reverse(reverse_name, args=arg))
                         form_field = response.context['form'].fields[value]
+                        self.assertIsInstance(response.context['form'],
+                                              PostForm)
                         self.assertIsInstance(form_field, expected)
 
     def posts_templates_show_correct_template(self, context, post,
@@ -175,14 +179,15 @@ class PostViewsTest(TestCase):
         response_1 = self.client.post(
             reverse('posts:add_comment', args=(self.post.id,)))
         login_redirect = '/auth/login/?next='
+        self.assertRedirects(
+            response_1, login_redirect + reverse('posts:add_comment',
+                                                 args=(self.post.id,)))
+        self.assertEqual(self.post.comments.count(), comments_count)
         response_2 = self.authorized_client.post(
             reverse('posts:add_comment', args=(self.post.id,)),
             data={'text': 'test-comment'},
             follow=True
         )
-        self.assertRedirects(
-            response_1, login_redirect + reverse('posts:add_comment',
-                                                 args=(self.post.id,)))
         self.assertEqual(response_2.status_code, HTTPStatus.OK)
         self.assertEqual(self.post.comments.count(), comments_count + 1)
 
@@ -311,7 +316,6 @@ class FollowTests(TestCase):
         response_follow = self.follower.get(reverse('posts:follow_index'))
         objects_count_follow = len(
             response_follow.context['page_obj'].object_list)
-        response = self.authorized_client.get('posts:follow_index')
         response_create = self.author_client.post(
             reverse('posts:post_create'),
             data={'text': 'test_new_post'},
@@ -320,9 +324,11 @@ class FollowTests(TestCase):
         response_follow_2 = self.follower.get(reverse('posts:follow_index'))
         objects_count_follow_2 = len(
             response_follow_2.context['page_obj'].object_list)
-        response_2 = self.authorized_client.get('posts:follow_index')
+        response = self.authorized_client.get(reverse('posts:follow_index'))
+        objects_count = len(
+            response.context['page_obj'].object_list)
         self.assertEqual(objects_count_follow, 1)
         self.assertEqual(response_create.status_code, HTTPStatus.OK)
         self.assertEqual(Post.objects.count(), posts_count + 1)
         self.assertEqual(objects_count_follow_2, 2)
-        self.assertEqual(response.content, response_2.content)
+        self.assertEqual(objects_count, 0)
