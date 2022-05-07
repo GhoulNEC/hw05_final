@@ -11,7 +11,7 @@ from django.test import Client, override_settings, TestCase
 from django.urls import reverse
 
 from ..forms import PostForm
-from ..models import Follow, Group, Post
+from ..models import Comment, Follow, Group, Post
 
 User = get_user_model()
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
@@ -98,9 +98,10 @@ class PostViewsTest(TestCase):
                                               PostForm)
                         self.assertIsInstance(form_field, expected)
 
-    def posts_templates_show_correct_template(self, context, post,
+    def posts_templates_show_correct_template(self, response, post,
                                               one_post=False):
-        first_object = context['post'] if one_post else context['page_obj'][0]
+        first_object = response.context['post'] if one_post \
+            else response.context['page_obj'][0]
         post_text_0 = first_object.text
         post_author_0 = first_object.author
         group_title_0 = first_object.group.title
@@ -111,18 +112,19 @@ class PostViewsTest(TestCase):
         self.assertEqual(group_title_0, post.group.title)
         self.assertEqual(pub_date_0, post.pub_date)
         self.assertEqual(image_0, post.image)
+        self.assertContains(response, '<img')
 
     def test_index_show_correct_context(self):
         """Шаблон index сформирован с правильным контекстом"""
         response = self.authorized_client.get(reverse('posts:index'))
-        self.posts_templates_show_correct_template(response.context,
+        self.posts_templates_show_correct_template(response,
                                                    self.post)
 
     def test_group_list_show_correct_context(self):
         """Шаблон group_list сформирован с правильным контекстом"""
         response = self.authorized_client.get(
             reverse('posts:group_list', kwargs={'slug': 'test_slug'}))
-        self.posts_templates_show_correct_template(response.context, self.post)
+        self.posts_templates_show_correct_template(response, self.post)
         group_object = response.context['group']
         group_title = group_object.title
         group_slug = group_object.slug
@@ -136,14 +138,14 @@ class PostViewsTest(TestCase):
         """Шаблон post_detail сформирован с правильным контекстом"""
         response = self.authorized_client.get(
             reverse('posts:post_detail', args=(self.post.group.id,)))
-        self.posts_templates_show_correct_template(response.context, self.post,
+        self.posts_templates_show_correct_template(response, self.post,
                                                    True)
 
     def test_profile_show_correct_context(self):
         """Шаблон profile сформирован с правильным контекстом"""
         response = self.authorized_client.get(
             reverse('posts:profile', kwargs={'username': 'test_author'}))
-        self.posts_templates_show_correct_template(response.context, self.post,
+        self.posts_templates_show_correct_template(response, self.post,
                                                    False)
         author_object = response.context['author']
         self.assertEqual(author_object, self.post.author)
@@ -172,24 +174,6 @@ class PostViewsTest(TestCase):
         self.assertEqual(response_1.status_code, HTTPStatus.FOUND)
         self.assertRedirects(response_1, reverse('posts:profile',
                                                  args=(self.post.author,)))
-
-    def test_post_comment_authorized_client(self):
-        """Комментировать пост может только авторизованный пользователь"""
-        comments_count = self.post.comments.count()
-        response_1 = self.client.post(
-            reverse('posts:add_comment', args=(self.post.id,)))
-        login_redirect = '/auth/login/?next='
-        self.assertRedirects(
-            response_1, login_redirect + reverse('posts:add_comment',
-                                                 args=(self.post.id,)))
-        self.assertEqual(self.post.comments.count(), comments_count)
-        response_2 = self.authorized_client.post(
-            reverse('posts:add_comment', args=(self.post.id,)),
-            data={'text': 'test-comment'},
-            follow=True
-        )
-        self.assertEqual(response_2.status_code, HTTPStatus.OK)
-        self.assertEqual(self.post.comments.count(), comments_count + 1)
 
 
 class PaginatorViewsTest(TestCase):
@@ -269,7 +253,7 @@ class CacheTests(TestCase):
         self.assertNotEqual(response_0.content, response_2.content)
 
 
-class FollowTests(TestCase):
+class FollowViewsTests(TestCase):
     @classmethod
     def setUpClass(cls):
         super().setUpClass()
@@ -332,3 +316,112 @@ class FollowTests(TestCase):
         self.assertEqual(Post.objects.count(), posts_count + 1)
         self.assertEqual(objects_count_follow_2, 2)
         self.assertEqual(objects_count, 0)
+
+
+class CommentViewsTests(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        cls.post = Post.objects.create(
+            author=User.objects.create_user(username='test_author'),
+            text='Тестовый текст',
+            group=Group.objects.create(
+                title='Тестовый заголовок',
+                slug='test_slug'
+            )
+        )
+
+    def setUp(self):
+        self.user = User.objects.create_user(username='test_user')
+        self.user_2 = User.objects.create_user(username='test_user_2')
+        self.authorized_client = Client()
+        self.authorized_client.force_login(self.user)
+        self.authorized_author = Client()
+        self.authorized_author.force_login(self.post.author)
+        self.authorized_client_2 = Client()
+        self.authorized_client_2.force_login(self.user_2)
+
+    def test_post_comment_authorized_client(self):
+        """Комментировать пост может только авторизованный пользователь"""
+        comments_count = Comment.objects.count()
+        response_1 = self.client.post(
+            reverse('posts:add_comment', args=(self.post.id,)))
+        login_redirect = '/auth/login/?next='
+        self.assertRedirects(
+            response_1, login_redirect + reverse('posts:add_comment',
+                                                 args=(self.post.id,)))
+        self.assertEqual(self.post.comments.count(), comments_count)
+        response_2 = self.authorized_client.post(
+            reverse('posts:add_comment', args=(self.post.id,)),
+            data={'text': 'test-comment'},
+            follow=True
+        )
+        self.assertEqual(response_2.status_code, HTTPStatus.OK)
+        self.assertEqual(self.post.comments.count(), comments_count + 1)
+
+    def test_post_delete_comment_post_author_or_comment_author(self):
+        """Удалять комментарии может только автор посла и автор комментария"""
+        comment_0 = Comment.objects.create(
+            post=self.post,
+            author=self.user,
+            text='test_comment'
+        )
+        comment_1 = Comment.objects.create(
+            post=self.post,
+            author=self.user,
+            text='test_comment_2'
+        )
+        comment_2 = Comment.objects.create(
+            post=self.post,
+            author=self.user,
+            text='test_comment_3'
+        )
+        comments_count = Comment.objects.count()
+        response_0 = self.authorized_author.get(reverse(
+            'posts:delete_comment', args=(comment_0.id,)))
+        comments_count_0 = Comment.objects.count()
+        response_1 = self.authorized_client.get(reverse(
+            'posts:delete_comment', args=(comment_1.id,)))
+        comments_count_1 = Comment.objects.count()
+        response_2 = self.authorized_client_2.get(reverse(
+            'posts:delete_comment', args=(comment_2.id,)))
+        comments_count_2 = Comment.objects.count()
+        self.assertEqual(response_0.status_code, HTTPStatus.FOUND)
+        self.assertEqual(comments_count_0, comments_count - 1)
+        self.assertEqual(response_1.status_code, HTTPStatus.FOUND)
+        self.assertEqual(comments_count_1, comments_count_0 - 1)
+        self.assertEqual(response_1.status_code, HTTPStatus.FOUND)
+        self.assertEqual(comments_count_2, comments_count_1)
+
+    def test_edit_comment(self):
+        """Редактировать комментарий, может только автор комментария"""
+        comment = Comment.objects.create(
+            post=self.post,
+            author=self.user,
+            text='test_comment'
+        )
+        comments_count = Comment.objects.count()
+        form_data = {'text': 'edited_comment'}
+        response_0 = self.authorized_client.post(reverse(
+            'posts:edit_comment', args=(comment.id,)),
+            data=form_data,
+            follow=True
+        )
+        comments_count_0 = Comment.objects.count()
+        edited_comment_0 = Comment.objects.get(id=comment.id)
+        response_1 = self.authorized_client_2.post(reverse(
+            'posts:edit_comment', args=(comment.id,)),
+            data=form_data,
+            follow=True
+        )
+        comments_count_1 = Comment.objects.count()
+        edited_comment_1 = Comment.objects.get(id=comment.id)
+        self.assertEqual(response_0.status_code, HTTPStatus.OK)
+        self.assertEqual(edited_comment_0.text, 'edited_comment')
+        self.assertEqual(comments_count, comments_count_0)
+        self.assertRedirects(response_0, reverse(
+            'posts:post_detail', args=(self.post.id,)))
+        self.assertEqual(comments_count, comments_count_1)
+        self.assertNotEqual(edited_comment_1, 'edited_comment')
+        self.assertRedirects(response_1, reverse(
+            'posts:post_detail', args=(self.post.id,)))

@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
 
-from ..models import Group, Post
+from ..models import Comment, Group, Post
 
 User = get_user_model()
 
@@ -17,11 +17,16 @@ class PostsURLTests(TestCase):
         cls.group = Group.objects.create(
             title='Тестовая группа',
             slug='test-slug',
-            description='Тестовое описание',
+            description='Тестовое описание'
         )
         cls.post = Post.objects.create(
             author=cls.user,
-            text='Тестовый пост',
+            text='Тестовый пост'
+        )
+        cls.comment = Comment.objects.create(
+            post=cls.post,
+            author=cls.user,
+            text='test_comment'
         )
 
     def setUp(self):
@@ -42,6 +47,10 @@ class PostsURLTests(TestCase):
             ('posts:follow_index', None, '/follow/'),
             ('posts:add_comment', (self.post.id,),
              f'/posts/{self.post.id}/comment/'),
+            ('posts:edit_comment', (self.comment.id,),
+             f'/posts/comment/{self.comment.id}/edit/'),
+            ('posts:delete_comment', (self.comment.id,),
+             f'/posts/comment/{self.comment.id}/delete/'),
             ('posts:profile_follow', (self.user_2,),
              f'/profile/{self.user_2}/follow/'),
             ('posts:profile_unfollow', (self.user_2,),
@@ -70,7 +79,7 @@ class PostsURLTests(TestCase):
 
     def test_posts_post_id_edit_url_exists_desired_location_post_author(self):
         """Страницы /posts/self.post.id/edit/,
-        /posts/self.post.id/delete перенаправляют пользователя,
+        /posts/self.post.id/delete /comment/edit/ перенаправляют пользователя,
         если он не является автором.
         """
         for reverse_name, arg, _ in self.url_names_reverse_names:
@@ -80,19 +89,22 @@ class PostsURLTests(TestCase):
                 if reverse_name in 'posts:post_edit':
                     self.assertRedirects(response, reverse(
                         'posts:post_detail', args=arg))
-                elif reverse_name in 'posts:post_delete':
-                    self.assertRedirects(response, reverse(
-                        'posts:post_detail', args=(self.post.id,)))
                 elif reverse_name in ['posts:add_comment',
                                       'posts:profile_follow',
-                                      'posts:profile_unfollow']:
+                                      'posts:profile_unfollow',
+                                      'posts:delete_comment']:
                     self.assertEqual(response.status_code, HTTPStatus.FOUND)
+                elif reverse_name in ['posts:post_delete',
+                                      'posts:edit_comment']:
+                    self.assertRedirects(response, reverse(
+                        'posts:post_detail', args=(self.post.id,)))
                 else:
                     self.assertEqual(response.status_code, HTTPStatus.OK)
 
     def test_posts_create_and_edit_redirects_guest_client(self):
-        """Страницы /create/, /edit/, /delete/, /comment/, /follow/, /unfollow/
-        перенаправляют анонимного пользователя на страницу логина
+        """Страницы /create/, /edit/, /delete/, /comment/, /comment/delete/,
+        /follow/, /unfollow/ перенаправляют анонимного пользователя
+        на страницу логина
         """
         login_redirect = '/auth/login/?next='
         for reverse_name, arg, _ in self.url_names_reverse_names:
@@ -100,8 +112,10 @@ class PostsURLTests(TestCase):
                 response = self.client.get(reverse(reverse_name, args=arg))
                 if reverse_name in ['posts:post_create', 'posts:post_edit',
                                     'posts:post_delete', 'posts:add_comment',
+                                    'posts:delete_comment',
                                     'posts:profile_follow',
-                                    'posts:profile_unfollow']:
+                                    'posts:profile_unfollow',
+                                    'posts:edit_comment']:
                     self.assertRedirects(
                         response,
                         login_redirect + reverse(reverse_name, args=arg))
@@ -125,9 +139,6 @@ class PostsURLTests(TestCase):
                     )
                     self.assertRedirects(response, reverse(
                         'posts:profile', args=(self.user_2,)))
-                elif reverse_name in 'posts:post_delete':
-                    self.assertRedirects(response, reverse(
-                        'posts:profile', args=(self.user,)))
                 elif reverse_name in 'posts:add_comment':
                     response = self.author_client.get(
                         reverse(reverse_name, args=arg),
@@ -136,5 +147,11 @@ class PostsURLTests(TestCase):
                     )
                     self.assertRedirects(response, reverse(
                         'posts:post_detail', args=(self.post.id,)))
+                elif reverse_name in 'posts:delete_comment':
+                    self.assertRedirects(response, reverse(
+                        'posts:post_detail', args=(self.post.id,)))
+                elif reverse_name in 'posts:post_delete':
+                    self.assertRedirects(response, reverse(
+                        'posts:profile', args=(self.user,)))
                 else:
                     self.assertEqual(response.status_code, HTTPStatus.OK)

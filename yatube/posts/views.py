@@ -2,7 +2,7 @@ from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 
 from .forms import CommentForm, PostForm
-from .models import Follow, Group, Post, User
+from .models import Comment, Follow, Group, Post, User
 from .utils import get_page_obj
 
 
@@ -92,6 +92,32 @@ def add_comment(request, post_id):
         comment.post = post
         comment.save()
     return redirect('posts:post_detail', post_id)
+
+
+@login_required
+def delete_comment(request, comment_id):
+    comment = get_object_or_404(Comment, id=comment_id)
+    if request.user in [comment.author, comment.post.author]:
+        comment.delete()
+    return redirect('posts:post_detail', post_id=comment.post.id)
+
+
+@login_required
+def edit_comment(request, comment_id):
+    comment = get_object_or_404(Comment, id=comment_id)
+    form = CommentForm(request.POST or None, instance=comment)
+    if request.user != comment.author:
+        return redirect('posts:post_detail', comment.post.id)
+    if not form.is_valid():
+        post = get_object_or_404(Post, id=comment.post.id)
+        context = {
+            'post': post,
+            'form': form,
+            'comment': comment,
+        }
+        return render(request, 'posts/post_detail.html', context)
+    form.save()
+    return redirect('posts:post_detail', comment.post.id)
 
 
 @login_required

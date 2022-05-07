@@ -33,7 +33,7 @@
         <a class="btn btn-primary" href="{% url 'posts:post_edit' post.pk %}">
                 редактировать запись
         </a>
-        <a class="btn btn-primary" href="{% url 'posts:post_delete' post.pk %}">
+        <a class="btn btn-outline-secondary" href="{% url 'posts:post_delete' post.pk %}">
           удалить запись
         </a>
       {% endif %}

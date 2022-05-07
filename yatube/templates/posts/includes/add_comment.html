@@ -2,9 +2,14 @@
 
 {% if user.is_authenticated %}
   <div class="card my-4">
-    <h5 class="card-header">Добавить комментарий:</h5>
+    <h5 class="card-header">
+        {% if form.instance.pk %}Редактировать комментарий:{% else %}Добавить комментарий:{% endif %}</h5>
     <div class="card-body">
-      <form method="post" action="{% url 'posts:add_comment' post.id %}">
+      <form method="post"
+            {% if action_url %}
+                action="{% url action_url %}"
+            {% endif %}
+      >
         {% csrf_token %}
         <div class="form-group mb-2">
           {{ form.text|addclass:"form-control" }}
@@ -12,8 +17,9 @@
             {{ form.text.help_text|safe }}
           </small>
         </div>
-        <button type="submit" class="btn btn-primary">Отправить</button>
-
+        <button type="submit" class="btn btn-primary">
+            {% if form.instance.pk %}Сохранить{% else %}Отправить{% endif %}
+        </button>
       </form>
     </div>
   </div>
@@ -33,6 +39,16 @@
         <p>
          {{ comment.text }}
         </p>
+        {% if user == comment.author %}
+            <a class="btn btn-outline-secondary" href="{% url 'posts:edit_comment' comment.pk %}">
+            редактировать комментарий
+            </a>
+        {% endif %}
+        {% if user == post.author or user == comment.author %}
+            <a class="btn btn-outline-secondary" href="{% url 'posts:delete_comment' comment.pk %}">
+              удалить комментарий
+            </a>
+        {% endif %}
       </div>
     </div>
 {% endfor %}
