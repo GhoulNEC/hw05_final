@@ -50,7 +50,6 @@
             <a class="btn btn-outline-secondary" href="{% url 'posts:delete_comment' comment.pk %}">
               удалить комментарий
             </a>
-            {% if not forloop.last %}<hr>{% endif %}
         {% endif %}
       </div>
     </div>

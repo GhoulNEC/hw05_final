@@ -3,13 +3,13 @@
     <ul>
         {% with request.resolver_match.view_name as view_name %}
             {% if view_name == 'posts:index' %}
-            <p>
-              {% if author %}
-              Автор: {{ post.author.get_full_name }}
-              {% else %}
-              Автор: <a class="text-decoration-none fw-bold" href="{% url 'posts:profile' post.author %}">{{ post.author.get_full_name }}</a>
-              {% endif %}
-            </p>
+                <p>
+                    {% if author %}
+                        Автор: {{ post.author.get_full_name }}
+                    {% else %}
+                        Автор: <a class="text-decoration-none fw-bold" href="{% url 'posts:profile' post.author %}">{{ post.author.get_full_name }}</a>
+                    {% endif %}
+                </p>
             {% endif %}
         {% endwith %}
         {% if post.group and not group %}
@@ -22,10 +22,10 @@
                     <span style="color:red">Этой публикации нет ни в одном сообществе</span>
                 </p>
             {% endif %}
-            <p>
-                Дата публикации: {{ post.pub_date|date:'d E Y' }}
-            </p>
         {% endif %}
+    <p>
+        Дата публикации: {{ post.pub_date|date:'d E Y' }}
+    </p>
     </ul>
     {% include 'posts/includes/image_displaying.html' %}
     <p>

@@ -4,17 +4,17 @@
         <img class="card-img my-2" src="{{ im.url }}">
     {% endthumbnail %}
       <li class="list-group-item">
-        Автор: &emsp;
+        Автор: &nbsp;
           <a class="text-decoration-none fw-bold" href="{% url 'posts:profile' author.username %}">{{ author.get_full_name }}</a>
       </li>
       <li class="list-group-item">
-        Количество постов: &emsp; {{ author.posts.count }}
+        Количество постов: &nbsp; {{ author.posts.count }}
       </li>
       <li class="list-group-item">
-        Дата рождения: &emsp; {{ author.birth_date }}
+        Дата рождения: &nbsp; {{ author.birth_date }}
       </li>
       <li class="list-group-item">
-        Город: &emsp; {{ author.city }}
+        Город: &nbsp; {{ author.city }}
       </li>
       <li class="list-group-item ">
           {% if author != request.user %}
