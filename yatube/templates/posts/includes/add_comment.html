@@ -6,8 +6,10 @@
         {% if form.instance.pk %}Редактировать комментарий:{% else %}Добавить комментарий:{% endif %}</h5>
     <div class="card-body">
       <form method="post"
-            {% if action_url %}
-                action="{% url action_url %}"
+            {% if is_edited %}
+                action="{% url 'posts:edit_comment' comment.id %}"
+            {% else %}
+                action="{% url 'posts:add_comment' post.id %}"
             {% endif %}
       >
         {% csrf_token %}
@@ -24,9 +26,9 @@
     </div>
   </div>
 {% endif %}
-
+<p>Всего комментариев: {{ post.comments.count }}</p>
 {% for comment in comments %}
-  <div class="media mb-4">
+  <div class="media mb-4 border rounded" style="padding: 20px">
     <div class="media-body">
       <h5 class="mt-0">
         <a href="{% url 'posts:profile' comment.author.username %}">
@@ -40,7 +42,7 @@
          {{ comment.text }}
         </p>
         {% if user == comment.author %}
-            <a class="btn btn-outline-secondary" href="{% url 'posts:edit_comment' comment.pk %}">
+            <a class="btn btn-primary" href="{% url 'posts:edit_comment' comment.pk %}">
             редактировать комментарий
             </a>
         {% endif %}
@@ -48,6 +50,7 @@
             <a class="btn btn-outline-secondary" href="{% url 'posts:delete_comment' comment.pk %}">
               удалить комментарий
             </a>
+            {% if not forloop.last %}<hr>{% endif %}
         {% endif %}
       </div>
     </div>

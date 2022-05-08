@@ -4,16 +4,14 @@ from http import HTTPStatus
 
 from django import forms
 from django.conf import settings
-from django.contrib.auth import get_user_model
 from django.core.cache import cache
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import Client, override_settings, TestCase
 from django.urls import reverse
 
 from ..forms import PostForm
-from ..models import Comment, Follow, Group, Post
+from ..models import Comment, Follow, Group, Post, User
 
-User = get_user_model()
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
 
@@ -409,9 +407,10 @@ class CommentViewsTests(TestCase):
         )
         comments_count_0 = Comment.objects.count()
         edited_comment_0 = Comment.objects.get(id=comment.id)
+        form_data_1 = {'text': 'edited_comment_1'}
         response_1 = self.authorized_client_2.post(reverse(
             'posts:edit_comment', args=(comment.id,)),
-            data=form_data,
+            data=form_data_1,
             follow=True
         )
         comments_count_1 = Comment.objects.count()
@@ -422,6 +421,6 @@ class CommentViewsTests(TestCase):
         self.assertRedirects(response_0, reverse(
             'posts:post_detail', args=(self.post.id,)))
         self.assertEqual(comments_count, comments_count_1)
-        self.assertNotEqual(edited_comment_1, 'edited_comment')
+        self.assertNotEqual(edited_comment_1.text, 'edited_comment_1')
         self.assertRedirects(response_1, reverse(
             'posts:post_detail', args=(self.post.id,)))

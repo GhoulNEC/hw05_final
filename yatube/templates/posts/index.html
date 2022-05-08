@@ -1,8 +1,9 @@
 {% extends 'base.html' %}
+{% load thumbnail %}
 {% load cache %}
 {% block title %}Последние обновления на сайте{% endblock %}
 {% block content %}
-  <div class="container py-5">
+  <div class="container py-5 col-12 col-md-10">
     {% cache 20 index_page %}
     {% include 'posts/includes/switcher.html' %}
     <h1>Последние обновления на сайте</h1>

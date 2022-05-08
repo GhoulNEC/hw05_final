@@ -1,7 +1,11 @@
-from django.contrib.auth import get_user_model
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-User = get_user_model()
+
+class User(AbstractUser):
+    birth_date = models.DateField('Дата рождения', blank=True, null=True)
+    avatar = models.ImageField('Аватарка', blank=True, null=True)
+    city = models.TextField('Город', max_length=30, blank=True, null=True)
 
 
 class Group(models.Model):
@@ -39,7 +43,8 @@ class Post(models.Model):
     image = models.ImageField(
         'Картинка',
         upload_to='posts/',
-        blank=True
+        blank=True,
+        null=True
     )
 
     class Meta:

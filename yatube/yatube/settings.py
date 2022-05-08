@@ -109,3 +109,6 @@ CACHES = {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
     }
 }
+
+AUTH_USER_MODEL = 'posts.User'
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'

@@ -3,26 +3,9 @@
 {% block content %}
   <div class="container py-5 row">
     <aside class="col-12 col-md-3">
-      <article>
-        <ul class="list-group list-group-flush">
-          <li>
-            Дата публикации: {{ post.pub_date|date:'d E Y' }}
-          </li>
-              <li>
-                {% if post.group %}
-                Группа: <a href="{% url 'posts:group_list' post.group.slug %}">{{ post.group.title }}</a>
-                {% else %}
-                <span style="color:red">Группы нет</span>
-                {% endif %}
-              </li>
-            <li>
-              Автор: <a href="{% url 'posts:profile' post.author %}">{{ post.author.get_full_name }}</a>
-            </li>
-            <li>
-            Всего постов автора:  <span >{{ post.author.posts.count }}</span>
-          </li>
-        </ul>
-      </article>
+        <article class="border rounded" style="padding: 5px">
+            {% include 'posts/includes/profile_card.html' with author=post.author %}
+        </article>
     </aside>
     <article class="col-12 col-md-9">
       {% include 'posts/includes/image_displaying.html' %}

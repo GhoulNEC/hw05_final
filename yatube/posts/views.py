@@ -1,7 +1,7 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 
-from .forms import CommentForm, PostForm
+from .forms import CommentForm, EditProfileForm, PostForm
 from .models import Comment, Follow, Group, Post, User
 from .utils import get_page_obj
 
@@ -36,6 +36,19 @@ def profile(request, username):
         'following': following,
     }
     return render(request, 'posts/profile.html', context)
+
+
+@login_required
+def edit_profile(request, username):
+    author = get_object_or_404(User, username=username)
+    if author != request.user:
+        return redirect('posts:profile', author.username)
+    form = EditProfileForm(request.POST or None, files=request.FILES or None,
+                           instance=author)
+    if not form.is_valid():
+        return render(request, 'posts/edit_profile.html', {'form': form})
+    form.save()
+    return redirect('posts:profile', author.username)
 
 
 def post_detail(request, post_id):
@@ -103,7 +116,7 @@ def delete_comment(request, comment_id):
 
 
 @login_required
-def edit_comment(request, comment_id):
+def edit_comment(request, comment_id, is_edited=True):
     comment = get_object_or_404(Comment, id=comment_id)
     form = CommentForm(request.POST or None, instance=comment)
     if request.user != comment.author:
@@ -114,6 +127,7 @@ def edit_comment(request, comment_id):
             'post': post,
             'form': form,
             'comment': comment,
+            'is_edited': is_edited
         }
         return render(request, 'posts/post_detail.html', context)
     form.save()
