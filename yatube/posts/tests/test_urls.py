@@ -37,6 +37,7 @@ class PostsURLTests(TestCase):
             ('posts:group_list', (self.group.slug,),
              f'/group/{self.group.slug}/'),
             ('posts:profile', (self.user,), f'/profile/{self.user}/'),
+            ('posts:edit_profile', (self.user,), f'/profile/{self.user}/edit/'),
             ('posts:post_detail', (self.post.id,), f'/posts/{self.post.id}/'),
             ('posts:post_create', None, '/create/'),
             ('posts:post_edit', (self.post.id,),
@@ -95,6 +96,9 @@ class PostsURLTests(TestCase):
                                       'posts:edit_comment']:
                     self.assertRedirects(response, reverse(
                         'posts:post_detail', args=(self.post.id,)))
+                elif reverse_name in 'posts:edit_profile':
+                    self.assertRedirects(response, reverse(
+                        'posts:profile', args=(self.user,)))
                 else:
                     self.assertEqual(response.status_code, HTTPStatus.OK)
 
@@ -112,7 +116,8 @@ class PostsURLTests(TestCase):
                                     'posts:delete_comment',
                                     'posts:profile_follow',
                                     'posts:profile_unfollow',
-                                    'posts:edit_comment']:
+                                    'posts:edit_comment',
+                                    'posts:edit_profile']:
                     self.assertRedirects(
                         response,
                         login_redirect + reverse(reverse_name, args=arg))
