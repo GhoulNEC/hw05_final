@@ -390,6 +390,9 @@ class CommentViewsTests(TestCase):
         self.assertEqual(comments_count_1, comments_count_0 - 1)
         self.assertEqual(response_1.status_code, HTTPStatus.FOUND)
         self.assertEqual(comments_count_2, comments_count_1)
+        self.assertRedirects(response_2, reverse(
+            'posts:post_detail', args=(self.post.id,)))
+        self.assertEqual(comments_count_1, comments_count_2)
 
     def test_edit_comment(self):
         """Редактировать комментарий, может только автор комментария"""
