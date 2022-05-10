@@ -2,7 +2,7 @@
 <article>
     <ul>
         {% with request.resolver_match.view_name as view_name %}
-            {% if view_name == 'posts:index' %}
+            {% if view_name != 'posts:profile' or view_name == 'posts:post_detail' %}
                 <p>
                     {% if author %}
                         Автор: {{ post.author.get_full_name }}
@@ -23,7 +23,7 @@
                 </p>
             {% endif %}
         {% endif %}
-    <p>
+    <p class="text-muted">
         Дата публикации: {{ post.pub_date|date:'d E Y' }}
     </p>
     </ul>
@@ -34,5 +34,4 @@
     <p>
       <a class="btn btn-outline-primary" href="{% url 'posts:post_detail' post.pk %}">подробная информация</a>
     </p>
-    {% if not forloop.last %}<hr>{% endif %}
 </article>

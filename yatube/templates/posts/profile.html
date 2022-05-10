@@ -7,7 +7,7 @@
             {% include 'posts/includes/profile_card.html' %}
         </article>
     </aside>
-    <article class="col-12 col-md-9">
+    <article class="col-12 col-md-9 border rounded" style="padding: 15px">
         {% for post in page_obj %}
         {% include 'posts/includes/post_card.html' %}
         {% endfor %}

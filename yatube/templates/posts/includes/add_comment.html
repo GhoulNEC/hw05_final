@@ -6,7 +6,7 @@
         {% if form.instance.pk %}Редактировать комментарий:{% else %}Добавить комментарий:{% endif %}</h5>
     <div class="card-body">
       <form method="post"
-            {% if is_edited %}
+            {% if form.instance.pk %}
                 action="{% url 'posts:edit_comment' comment.id %}"
             {% else %}
                 action="{% url 'posts:add_comment' post.id %}"
@@ -35,7 +35,7 @@
           {{ comment.author.username }}
         </a>
       </h5>
-      <p>
+      <p class="text-muted">
         {{ comment.created }}
       </p>
         <p>

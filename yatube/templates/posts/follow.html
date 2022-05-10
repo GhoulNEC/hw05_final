@@ -1,12 +1,17 @@
 {% extends 'base.html' %}
 {% block title %}Подписки{% endblock %}
 {% block content %}
-  <div class="container py-5">
-      {% include 'posts/includes/switcher.html' %}
-      <h1>Ваши подписки</h1>
-      {% for post in page_obj %}
-          {% include 'posts/includes/post_card.html' %}
-      {% endfor %}
-      {% include 'posts/includes/paginator.html' %}
+  <div class="container py-5 col-12 col-md-10">
+      <article class="border rounded" style="padding: 20px">
+          {% include 'posts/includes/switcher.html' %}
+          <h1>Ваши подписки</h1>
+          <hr>
+          {% for post in page_obj %}
+              <article class="border rounded" style="padding: 15px; margin-bottom: 15px">
+                {% include 'posts/includes/post_card.html' %}
+              </article>
+          {% endfor %}
+          {% include 'posts/includes/paginator.html' %}
+      </article>
   </div>
 {% endblock %}

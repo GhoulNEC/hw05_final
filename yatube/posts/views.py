@@ -27,13 +27,15 @@ def group_posts(request, slug):
 def profile(request, username):
     author = get_object_or_404(User, username=username)
     posts = author.posts.select_related('group')
-    following = Follow.objects.filter(
-        user=request.user, author=author).exists() if \
-        request.user.is_authenticated else False
+    following = request.user.is_authenticated and \
+                (Follow.objects.filter(
+                    user=request.user, author=author).exists())
+    followers = Follow.objects.filter(author=author)
     context = {
         'author': author,
         'page_obj': get_page_obj(request, posts),
         'following': following,
+        'followers': followers,
     }
     return render(request, 'posts/profile.html', context)
 
@@ -54,10 +56,17 @@ def edit_profile(request, username):
 def post_detail(request, post_id):
     post = get_object_or_404(Post, pk=post_id)
     form = CommentForm(request.POST or None)
+    author = post.author
+    following = Follow.objects.filter(
+        user=request.user, author=author).exists() if \
+        request.user.is_authenticated else False
+    followers = Follow.objects.filter(author=author)
     context = {
         'post': post,
         'form': form,
         'comments': post.comments.all(),
+        'following': following,
+        'followers': followers,
     }
     return render(request, 'posts/post_detail.html', context)
 
@@ -116,18 +125,16 @@ def delete_comment(request, comment_id):
 
 
 @login_required
-def edit_comment(request, comment_id, is_edited=True):
+def edit_comment(request, comment_id):
     comment = get_object_or_404(Comment, id=comment_id)
-    form = CommentForm(request.POST or None, instance=comment)
     if request.user != comment.author:
         return redirect('posts:post_detail', comment.post.id)
+    form = CommentForm(request.POST or None, instance=comment)
     if not form.is_valid():
-        post = get_object_or_404(Post, id=comment.post.id)
         context = {
-            'post': post,
+            'post': comment.post,
             'form': form,
             'comment': comment,
-            'is_edited': is_edited
         }
         return render(request, 'posts/post_detail.html', context)
     form.save()
@@ -153,6 +160,6 @@ def profile_follow(request, username):
 
 @login_required
 def profile_unfollow(request, username):
-    author = get_object_or_404(User, username=username)
-    Follow.objects.filter(user=request.user, author=author).delete()
+    Follow.objects.filter(
+        user=request.user, author__username=username).delete()
     return redirect('posts:profile', username)

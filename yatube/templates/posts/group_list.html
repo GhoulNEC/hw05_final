@@ -3,11 +3,17 @@
   Записи сообщества {{ group.title }}
 {% endblock %}
 {% block content %}
-  <div class="container py-5">
-    <h1>{{ group.title }}</h1>
-    <p>{{ group.description|linebreaks }}</p>
+  <div class="container py-5 col-12 col-md-10">
+    <article style="padding: 20px; margin-bottom: 40px; text-align: center">
+        <hr>
+        <h1>{{ group.title }}</h1>
+        <p>{{ group.description|linebreaks }}</p>
+        <hr>
+    </article>
     {% for post in page_obj %}
-    {% include 'posts/includes/post_card.html' %}
+        <article class="border rounded" style="padding: 15px; margin-bottom: 15px">
+            {% include 'posts/includes/post_card.html' %}
+        </article>
     {% endfor %}
     {% include 'posts/includes/paginator.html' %}
   </div>

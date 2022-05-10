@@ -7,11 +7,12 @@
             {% include 'posts/includes/profile_card.html' with author=post.author %}
         </article>
     </aside>
-    <article class="col-12 col-md-9">
+    <article class="col-12 col-md-9 border rounded" style="padding: 15px">
       {% include 'posts/includes/image_displaying.html' %}
       <p>
        {{ post.text|linebreaks }}
       </p>
+      <p style="text-align: right" class="text-muted">{{ post.pub_date|date:'d E Y' }}</p>
       {% if request.user == post.author %}
         <a class="btn btn-primary" href="{% url 'posts:post_edit' post.pk %}">
                 редактировать запись

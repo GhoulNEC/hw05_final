@@ -1,43 +1,46 @@
-  <ul class="list-group list-group-flush">
-    {% load thumbnail %}
-    {% thumbnail author.avatar "180x150" crop="center" upscale=True as im %}
-        <img class="card-img my-2" src="{{ im.url }}">
-    {% endthumbnail %}
-      <li class="list-group-item">
-        Автор: &nbsp;
-          <a class="text-decoration-none fw-bold" href="{% url 'posts:profile' author.username %}">{{ author.get_full_name }}</a>
-      </li>
-      <li class="list-group-item">
-        Количество постов: &nbsp; {{ author.posts.count }}
-      </li>
-      <li class="list-group-item">
-        Дата рождения: &nbsp; {{ author.birth_date }}
-      </li>
-      <li class="list-group-item">
-        Город: &nbsp; {{ author.city }}
-      </li>
-      <li class="list-group-item ">
-          {% if author != request.user %}
-            {% if following %}
-              <a class="btn btn-light" style="margin-left: 25%"
-                 href="{% url 'posts:profile_unfollow' author.username %}" role="button"
-              >
-                Отписаться
-              </a>
-            {% else %}
-              <a
-                class="btn btn-primary" style="margin-left: 25%"
-                href="{% url 'posts:profile_follow' author.username %}" role="button"
-              >
-                Подписаться
-              </a>
-            {% endif %}
-          {% else %}
-            <a class="btn btn-primary" style="margin-left: 7%"
+<ul class="list-group list-group-flush">
+{% load thumbnail %}
+{% thumbnail author.avatar "180x150" crop="center" upscale=True as im %}
+    <img class="card-img my-2" src="{{ im.url }}">
+{% endthumbnail %}
+  <li class="list-group-item">
+      Автор: &nbsp;
+      <a class="text-decoration-none fw-bold" href="{% url 'posts:profile' author.username %}">{{ author.get_full_name }}</a>
+  </li>
+  <li class="list-group-item">
+      Дата рождения: <br> <i>{{ author.birth_date }}</i>
+  </li>
+  <li class="list-group-item">
+      Город: &nbsp; <i>{{ author.city }}</i>
+  </li>
+  <li class="list-group-item">
+      Количество постов: &nbsp; <i>{{ author.posts.count }}</i>
+  </li>
+  <li class="list-group-item">
+      Подписчики: &nbsp; <i>{{ followers.count }}</i>
+  </li>
+  <li class="list-group-item " style="text-align: center">
+      {% if author != request.user %}
+        {% if following %}
+          <a class="btn btn-light"
+             href="{% url 'posts:profile_unfollow' author.username %}" role="button"
+          >
+            Отписаться
+          </a>
+        {% else %}
+          <a
+            class="btn btn-primary"
+            href="{% url 'posts:profile_follow' author.username %}" role="button"
+          >
+            Подписаться
+          </a>
+        {% endif %}
+      {% endif %}
+      {% if author == request.user %}
+            <a class="btn btn-primary"
                href="{% url 'posts:edit_profile' author.username %}" role="button">
                 Редактировать профиль
             </a>
-          {% endif %}
-      </li>
-  </ul>
-</aside>
+      {% endif %}
+  </li>
+</ul>

@@ -4,8 +4,9 @@ from django.db import models
 
 class User(AbstractUser):
     birth_date = models.DateField('Дата рождения', blank=True, null=True)
-    avatar = models.ImageField('Аватарка', blank=True, null=True)
-    city = models.TextField('Город', max_length=30, blank=True, null=True)
+    avatar = models.ImageField('Аватарка', upload_to='profile/',
+                               blank=True, null=True)
+    city = models.CharField('Город', max_length=30, blank=True, null=True)
 
 
 class Group(models.Model):

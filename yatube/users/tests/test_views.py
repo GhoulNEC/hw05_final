@@ -8,7 +8,6 @@ from posts.models import User
 class UsersViewsTest(TestCase):
     def setUp(self):
         self.user = User.objects.create(username='test_user')
-        self.guest_client = Client()
         self.authorizes_client = Client()
         self.authorizes_client.force_login(self.user)
 
@@ -20,7 +19,7 @@ class UsersViewsTest(TestCase):
         }
         for reverse_name, template in users_names_templates.items():
             with self.subTest(reverse_name=reverse_name):
-                response = self.guest_client.get(reverse_name)
+                response = self.client.get(reverse_name)
                 self.assertTemplateUsed(response, template)
 
     def test_users_names_uses_correct_password_reset_templates(self):
@@ -35,12 +34,12 @@ class UsersViewsTest(TestCase):
         }
         for reverse_name, template in users_names_templates.items():
             with self.subTest(reverse_name=reverse_name):
-                response = self.guest_client.get(reverse_name)
+                response = self.client.get(reverse_name)
                 self.assertTemplateUsed(response, template)
 
     def test_signup_show_correct_context(self):
         """Шаблон signup сформирован с правильным контекстом"""
-        response = self.guest_client.get(reverse('users:signup'))
+        response = self.client.get(reverse('users:signup'))
         form_fields = {
             'first_name': forms.fields.CharField,
             'last_name': forms.fields.CharField,
