@@ -29,12 +29,10 @@ def profile(request, username):
     posts = author.posts.select_related('group')
     following = request.user.is_authenticated and (Follow.objects.filter(
         user=request.user, author=author).exists())
-    followers = Follow.objects.filter(author=author)
     context = {
         'author': author,
         'page_obj': get_page_obj(request, posts),
         'following': following,
-        'followers': followers,
     }
     return render(request, 'posts/profile.html', context)
 
@@ -59,13 +57,11 @@ def post_detail(request, post_id):
     following = Follow.objects.filter(
         user=request.user, author=author).exists() if \
         request.user.is_authenticated else False
-    followers = Follow.objects.filter(author=author)
     context = {
         'post': post,
         'form': form,
         'comments': post.comments.all(),
         'following': following,
-        'followers': followers,
     }
     return render(request, 'posts/post_detail.html', context)
 

@@ -17,7 +17,7 @@
       Количество постов: &nbsp; <i>{{ author.posts.count }}</i>
   </li>
   <li class="list-group-item">
-      Подписчики: &nbsp; <i>{{ followers.count }}</i>
+      Подписчики: &nbsp; <i>{{ author.following.count }}</i>
   </li>
   <li class="list-group-item " style="text-align: center">
       {% if author != request.user %}

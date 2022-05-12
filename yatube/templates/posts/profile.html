@@ -9,7 +9,9 @@
     </aside>
     <article class="col-12 col-md-9 border rounded" style="padding: 15px">
         {% for post in page_obj %}
-        {% include 'posts/includes/post_card.html' %}
+            <ul class="border rounded" style="padding: 10px">
+                {% include 'posts/includes/post_card.html' %}
+            </ul>
         {% endfor %}
         {% include 'posts/includes/paginator.html' %}
     </article>
