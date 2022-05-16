@@ -7,7 +7,7 @@
             {% include 'posts/includes/profile_card.html' with author=post.author %}
         </article>
     </aside>
-    <article class="col-12 col-md-9 border rounded" style="padding: 15px">
+    <div class="col-12 col-md-9 border rounded" style="padding: 15px">
       {% include 'posts/includes/image_displaying.html' %}
       <p>
        {{ post.text|linebreaks }}
@@ -22,6 +22,6 @@
         </a>
       {% endif %}
       {% include 'posts/includes/add_comment.html' %}
-    </article>
+    </div>
   </div>
 {% endblock %}

@@ -1,7 +1,8 @@
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import get_object_or_404, redirect, render
 
-from .forms import CommentForm, EditProfileForm, PostForm
+from .forms import (CommentForm, EditGroupsForm,
+                    EditProfileForm, PostForm)
 from .models import Comment, Follow, Group, Post, User
 from .utils import get_page_obj
 
@@ -54,9 +55,8 @@ def post_detail(request, post_id):
     post = get_object_or_404(Post, pk=post_id)
     form = CommentForm(request.POST or None)
     author = post.author
-    following = Follow.objects.filter(
-        user=request.user, author=author).exists() if \
-        request.user.is_authenticated else False
+    following = request.user.is_authenticated and (Follow.objects.filter(
+        user=request.user, author=author).exists())
     context = {
         'post': post,
         'form': form,
@@ -112,6 +112,30 @@ def add_comment(request, post_id):
 
 
 @login_required
+def add_child_comment(request, comment_id):
+    comment = get_object_or_404(Comment, id=comment_id)
+    form = CommentForm(request.POST or None)
+    if comment.parent:
+        return redirect('posts:post_detail', comment.post.id)
+    if not form.is_valid():
+        comments = Comment.objects.filter(post_id=comment.post.id)
+        context = {
+            'post': comment.post,
+            'form': form,
+            'comments': comments,
+            'comment': comment,
+        }
+        return render(request, 'posts/post_detail.html',
+                      context)
+    child_comment = form.save(commit=False)
+    child_comment.post = comment.post
+    child_comment.author = request.user
+    child_comment.parent = comment
+    child_comment.save()
+    return redirect('posts:post_detail', comment.post.id)
+
+
+@login_required
 def delete_comment(request, comment_id):
     comment = get_object_or_404(Comment, id=comment_id)
     if request.user in [comment.author, comment.post.author]:
@@ -126,9 +150,11 @@ def edit_comment(request, comment_id):
         return redirect('posts:post_detail', comment.post.id)
     form = CommentForm(request.POST or None, instance=comment)
     if not form.is_valid():
+        comments = Comment.objects.filter(post_id=comment.post.id)
         context = {
             'post': comment.post,
             'form': form,
+            'comments': comments,
             'comment': comment,
         }
         return render(request, 'posts/post_detail.html', context)
@@ -158,3 +184,42 @@ def profile_unfollow(request, username):
     Follow.objects.filter(
         user=request.user, author__username=username).delete()
     return redirect('posts:profile', username)
+
+
+@permission_required(perm='posts.view_group',
+                     raise_exception=PermissionError)
+def groups_index(request):
+    groups = Group.objects.all()
+    context = {
+        'groups': groups,
+    }
+    return render(request, 'posts/groups.html', context)
+
+
+@permission_required(perm='posts.add_group',
+                     raise_exception=PermissionError)
+def group_create(request):
+    form = EditGroupsForm(request.POST or None)
+    if not form.is_valid():
+        return render(request, 'posts/create_group.html', {'form': form})
+    form.save()
+    return redirect('posts:groups_index')
+
+
+@permission_required(perm='posts.change_group',
+                     raise_exception=PermissionError)
+def groups_edit(request, group_id):
+    group = get_object_or_404(Group, id=group_id)
+    form = EditGroupsForm(request.POST or None, instance=group)
+    if not form.is_valid():
+        return render(request, 'posts/create_group.html', {'form': form})
+    form.save()
+    return redirect('posts:groups_index')
+
+
+@permission_required(perm='posts.delete_group',
+                     raise_exception=PermissionError)
+def groups_delete(request, group_id):
+    group = get_object_or_404(Group, id=group_id)
+    group.delete()
+    return redirect('posts:groups_index')

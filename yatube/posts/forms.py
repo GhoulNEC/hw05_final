@@ -1,6 +1,8 @@
 from django import forms
 
-from .models import Comment, Post, User
+from .models import Comment, Group, Post, User
+
+from mptt.forms import TreeNodeChoiceField
 
 
 class PostForm(forms.ModelForm):
@@ -14,11 +16,14 @@ class PostForm(forms.ModelForm):
 
 
 class CommentForm(forms.ModelForm):
+
     class Meta:
         model = Comment
         fields = ('text',)
-        labels = {'text': 'Комментарий'}
-        help_texts = {'text': 'прокомментируйте пост'}
+        labels = {'text': 'Комментарий',}
+        help_texts = {
+            'text': 'прокомментируйте пост',
+        }
 
 
 class EditProfileForm(forms.ModelForm):
@@ -42,3 +47,9 @@ class EditProfileForm(forms.ModelForm):
             'avatar': 'Загрузите картинку для профиля',
             'city': 'Укажите город',
         }
+
+
+class EditGroupsForm(forms.ModelForm):
+    class Meta:
+        model = Group
+        fields = ('title', 'slug', 'description')

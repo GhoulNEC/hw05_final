@@ -1,16 +1,26 @@
 {% load user_filters %}
-
+{% load mptt_tags %}
+{% with request.resolver_match.view_name as view_name %}
 {% if user.is_authenticated %}
   <div class="card my-4">
     <h5 class="card-header">
-        {% if form.instance.pk %}Редактировать комментарий:{% else %}Добавить комментарий:{% endif %}</h5>
+        {% if not view_name == 'posts:add_child_comment' %}
+            {% if form.instance.pk %}Редактировать комментарий:{% else %}Добавить комментарий:{% endif %}
+        {% else %}
+            Ответ:
+        {% endif %}
+    </h5>
     <div class="card-body">
       <form method="post"
-            {% if form.instance.pk %}
-                action="{% url 'posts:edit_comment' comment.id %}"
-            {% else %}
-                action="{% url 'posts:add_comment' post.id %}"
-            {% endif %}
+              {% if not view_name == 'posts:add_child_comment' %}
+                  {% if form.instance.pk %}
+                    action="{% url 'posts:edit_comment' comment.id %}"
+                  {% else %}
+                    action="{% url 'posts:add_comment' post.id %}"
+                  {% endif %}
+              {% else %}
+                    action="{% url 'posts:add_child_comment' comment.id %}"
+              {% endif %}
       >
         {% csrf_token %}
         <div class="form-group mb-2">
@@ -20,37 +30,67 @@
           </small>
         </div>
         <button type="submit" class="btn btn-primary">
-            {% if form.instance.pk %}Сохранить{% else %}Отправить{% endif %}
+            {% if not view_name == 'posts:add_child_comment' %}
+                {% if form.instance.pk %}Сохранить{% else %}Отправить{% endif %}
+            {% else %}
+                Ответить
+            {% endif %}
         </button>
       </form>
     </div>
   </div>
 {% endif %}
+{% endwith %}
 <p>Всего комментариев: {{ post.comments.count }}</p>
-{% for comment in comments %}
-  <div class="media mb-4 border rounded" style="padding: 20px">
-    <div class="media-body">
-      <h5 class="mt-0">
-        <a href="{% url 'posts:profile' comment.author.username %}">
-          {{ comment.author.username }}
-        </a>
-      </h5>
-      <p class="text-muted">
-        {{ comment.created }}
-      </p>
-        <p>
-         {{ comment.text }}
+{% recursetree comments %}
+    <div class="media mb-4 border rounded main-div" style="padding: 20px">
+        <h5 class="mt-0">
+            <a class="text-decoration-none" href="{% url 'posts:profile' node.author.username %}">
+                {{ node.author.username }}
+            </a>
+        </h5>
+        <p class="text-muted">
+            {{ node.created }}
         </p>
-        {% if user == comment.author %}
-            <a class="btn btn-primary" href="{% url 'posts:edit_comment' comment.pk %}">
-            редактировать комментарий
+        <p>
+            {{ node.text }}
+        </p>
+        {% if user == node.author %}
+            <a class="btn btn-primary" style="margin-bottom: 15px"
+               href="{% url 'posts:edit_comment' node.pk %}">
+                редактировать комментарий
             </a>
         {% endif %}
-        {% if user == post.author or user == comment.author %}
-            <a class="btn btn-outline-secondary" href="{% url 'posts:delete_comment' comment.pk %}">
-              удалить комментарий
+        {% if user == post.author or user == node.author %}
+            <a class="btn btn-outline-secondary" style="margin-bottom: 15px"
+               href="{% url 'posts:delete_comment' node.pk %}">
+                удалить комментарий
             </a>
         {% endif %}
-      </div>
+        {% if user.is_authenticated and not node.parent %}
+            <p>
+                <a class="btn btn-outline-primary"
+                   href="{% url 'posts:add_child_comment' node.pk %}">
+                    ответить
+                </a>
+            </p>
+        {% endif %}
+        {% if not node.parent %}
+            {% if node.children.count != 0 %}
+                <hr>
+                <button class="btn btn-outline-info toggle-btn">
+                    показать ответы
+                </button>
+                <span style="padding-left: 30px" class="text-muted">всего ответов: {{ node.children.count }}</span>
+            {% endif %}
+        {% endif %}
+        {% if not node.is_leaf_node %}
+            <div class="children col-12 col-md-11"
+                 style="margin-top: 20px; margin-left: 40px; display: none">
+                {{ children }}
+            </div>
+        {% endif %}
     </div>
-{% endfor %}
+{% endrecursetree %}
+<button class="btn btn-light button-show-more" style="margin: 0 auto; display: block">показать еще</button>
+{% include 'posts/includes/paginator.html' with page_obj=comments %}

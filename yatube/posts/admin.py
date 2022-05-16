@@ -1,6 +1,8 @@
 from django.contrib import admin
 
-from .models import Comment, Follow, Group, Post, User
+from . import models
+
+from mptt.admin import MPTTModelAdmin
 
 
 class PostAdmin(admin.ModelAdmin):
@@ -29,23 +31,18 @@ class GroupAdmin(admin.ModelAdmin):
     prepopulated_fields = {'slug': ('title',)}
 
 
-class CommentAdmin(admin.ModelAdmin):
-    list_display = ('text', 'created', 'author', 'post')
-    list_filter = ('created',)
-
-
 class FollowAdmin(admin.ModelAdmin):
     list_display = ('pk', 'author', 'user')
 
 
 class UserAdmin(admin.ModelAdmin):
-    list_display = ('username', 'first_name', 'last_name', 'email',
-                    'birth_date', 'city')
+    list_display = ('permission', 'username', 'first_name',
+                    'last_name', 'email', 'birth_date', 'city')
     search_fields = ('username',)
 
 
-admin.site.register(Post, PostAdmin)
-admin.site.register(Group, GroupAdmin)
-admin.site.register(Comment, CommentAdmin)
-admin.site.register(Follow, FollowAdmin)
-admin.site.register(User, UserAdmin)
+admin.site.register(models.Post, PostAdmin)
+admin.site.register(models.Group, GroupAdmin)
+admin.site.register(models.Follow, FollowAdmin)
+admin.site.register(models.User, UserAdmin)
+admin.site.register(models.Comment, MPTTModelAdmin)

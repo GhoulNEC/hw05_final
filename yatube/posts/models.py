@@ -1,12 +1,21 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+from mptt.models import MPTTModel, TreeForeignKey
+
 
 class User(AbstractUser):
+    access_rights = (
+        ('admin', 'Администратор'),
+        ('moderator', 'Модератор'),
+        ('user', 'Пользователь')
+    )
     birth_date = models.DateField('Дата рождения', blank=True, null=True)
     avatar = models.ImageField('Аватарка', upload_to='profile/',
                                blank=True, null=True)
     city = models.CharField('Город', max_length=30, blank=True, null=True)
+    permission = models.CharField('Тип пользователя', max_length=30,
+                                  choices=access_rights, blank=True, null=True)
 
 
 class Group(models.Model):
@@ -57,7 +66,7 @@ class Post(models.Model):
         return self.text[:15]
 
 
-class Comment(models.Model):
+class Comment(MPTTModel):
     post = models.ForeignKey(
         Post,
         on_delete=models.CASCADE,
@@ -70,14 +79,19 @@ class Comment(models.Model):
         related_name='comments',
         verbose_name='Автор'
     )
+    parent = TreeForeignKey(
+        'self',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='children'
+    )
     text = models.TextField('Текст комментария',
                             help_text='Прокомментируйте пост')
     created = models.DateTimeField('Дата комментария', auto_now_add=True)
 
-    class Meta:
-        ordering = ('-created',)
-        verbose_name = 'Комментарий'
-        verbose_name_plural = 'Комментарии'
+    class MPTTMeta:
+        order_insertion_by = ('-created',)
 
 
 class Follow(models.Model):

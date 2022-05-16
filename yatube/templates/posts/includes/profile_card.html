@@ -20,6 +20,7 @@
       Подписчики: &nbsp; <i>{{ author.following.count }}</i>
   </li>
   <li class="list-group-item " style="text-align: center">
+    {% if user.is_authenticated %}
       {% if author != request.user %}
         {% if following %}
           <a class="btn btn-light"
@@ -35,12 +36,15 @@
             Подписаться
           </a>
         {% endif %}
-      {% endif %}
-      {% if author == request.user %}
+      {% else %}
             <a class="btn btn-primary"
                href="{% url 'posts:edit_profile' author.username %}" role="button">
                 Редактировать профиль
             </a>
       {% endif %}
+    {% else %}
+        <a class="text-decoration-none" href="{% url 'posts:profile_follow' author.username %}" role="button">Войдите</a>
+        <span style="font-style: italic;"> в аккаунт, чтобы подписаться на автора.</span>
+    {% endif %}
   </li>
 </ul>
