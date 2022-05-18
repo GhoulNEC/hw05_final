@@ -5,7 +5,6 @@
 {% block content %}
     <div class="container py-5 col-12 col-md-10"
          xmlns="http://www.w3.org/1999/html">
-    {% cache 20 index_page %}
         <article class="border rounded" style="padding: 20px">
             {% include 'posts/includes/switcher.html' %}
             <h1>Последние обновления на сайте</h1>
@@ -17,6 +16,5 @@
             {% endfor %}
             {% include 'posts/includes/paginator.html' %}
         </article>
-    {% endcache %}
-  </div>
+    </div>
 {% endblock %}

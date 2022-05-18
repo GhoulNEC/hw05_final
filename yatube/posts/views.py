@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required, permission_required
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.cache import cache_page
 
 from .forms import (CommentForm, EditGroupsForm,
                     EditProfileForm, PostForm)
@@ -7,6 +8,7 @@ from .models import Comment, Follow, Group, Post, User
 from .utils import get_page_obj
 
 
+@cache_page(20)
 def index(request):
     posts = Post.objects.select_related('author', 'group').all()
     context = {

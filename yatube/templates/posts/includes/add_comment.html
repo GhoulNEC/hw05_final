@@ -43,7 +43,7 @@
 {% endwith %}
 <p>Всего комментариев: {{ post.comments.count }}</p>
 {% recursetree comments %}
-    <div class="media mb-4 border rounded main-div" style="padding: 20px">
+    <div class="media mb-4 border rounded main-div" style="padding: 20px;">
         <h5 class="mt-0">
             <a class="text-decoration-none" href="{% url 'posts:profile' node.author.username %}">
                 {{ node.author.username }}
@@ -56,7 +56,7 @@
             {{ node.text }}
         </p>
         {% if user == node.author %}
-            <a class="btn btn-primary" style="margin-bottom: 15px"
+            <a class="btn btn-outline-primary" style="margin-bottom: 15px"
                href="{% url 'posts:edit_comment' node.pk %}">
                 редактировать комментарий
             </a>
@@ -69,7 +69,7 @@
         {% endif %}
         {% if user.is_authenticated and not node.parent %}
             <p>
-                <a class="btn btn-outline-primary"
+                <a class="btn btn-primary"
                    href="{% url 'posts:add_child_comment' node.pk %}">
                     ответить
                 </a>
@@ -93,4 +93,3 @@
     </div>
 {% endrecursetree %}
 <button class="btn btn-light button-show-more" style="margin: 0 auto; display: block">показать еще</button>
-{% include 'posts/includes/paginator.html' with page_obj=comments %}
