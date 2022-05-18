@@ -98,6 +98,7 @@ class PostViewsTest(TestCase):
 
     def posts_templates_show_correct_template(self, response, post,
                                               one_post=False):
+        cache.clear()
         first_object = response.context['post'] if one_post \
             else response.context['page_obj'][0]
         post_text_0 = first_object.text
@@ -195,6 +196,7 @@ class PaginatorViewsTest(TestCase):
 
     def test_first_page_contains_ten_records(self):
         """Количество постов на первых страницах шаблонов должно быть 10"""
+        cache.clear()
         for reverse_name, arg in self.posts_names:
             with self.subTest(reverse_name=reverse_name):
                 response = self.client.get(reverse(reverse_name, args=arg))
@@ -233,6 +235,7 @@ class CacheTests(TestCase):
 
     def test_index_cache(self):
         """Страница index сохраняется в кэше"""
+        cache.clear()
         post_count = Post.objects.count()
         post_2 = Post.objects.create(author=self.author, text='test_text_2')
         response_0 = self.authorized_client.get(reverse('posts:index'))
