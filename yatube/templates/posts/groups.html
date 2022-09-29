@@ -10,7 +10,7 @@
           <hr>
           {% for group in groups %}
               <article class="border rounded" style="padding: 15px; margin-bottom: 15px">
-                <p>{{ group.title }}</p>
+                <a class="text-decoration-none" href="{% url 'posts:list_group' group.slug %}">{{ group.title }}</a>
                 <p>{{ group.description }}</p>
                 <a class="btn btn-outline-primary" href="{% url 'posts:group_edit' group.pk %}">
                     редактировать группу

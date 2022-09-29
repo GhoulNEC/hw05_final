@@ -26,20 +26,20 @@
           <a class="btn btn-light"
              href="{% url 'posts:profile_unfollow' author.username %}" role="button"
           >
-            Отписаться
+            отписаться
           </a>
         {% else %}
           <a
             class="btn btn-primary"
             href="{% url 'posts:profile_follow' author.username %}" role="button"
           >
-            Подписаться
+            подписаться
           </a>
         {% endif %}
       {% else %}
             <a class="btn btn-primary"
                href="{% url 'posts:edit_profile' author.username %}" role="button">
-                Редактировать профиль
+                редактировать профиль
             </a>
       {% endif %}
     {% else %}

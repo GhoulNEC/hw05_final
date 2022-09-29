@@ -31,9 +31,9 @@
         </div>
         <button type="submit" class="btn btn-primary">
             {% if not view_name == 'posts:add_child_comment' %}
-                {% if form.instance.pk %}Сохранить{% else %}Отправить{% endif %}
+                {% if form.instance.pk %}сохранить{% else %}отправить{% endif %}
             {% else %}
-                Ответить
+                ответить
             {% endif %}
         </button>
       </form>
